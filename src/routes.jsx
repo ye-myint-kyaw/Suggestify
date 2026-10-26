@@ -1,32 +1,37 @@
-import { Suspense } from "react";
+import { Suspense, lazy } from "react";
 import { Route, Routes } from "react-router-dom";
-import GetStarted from "./pages/GetStarted/GetStarted";
-import FeedbackGiven from "./pages/FeedbackGiven/FeedbackGiven";
-import HowItsDeveloped from "./pages/HowItsDeveloped/HowItsDeveloped";
-import Home from "./pages/Home/Home";
-import SuggestionBoxCreation from "./pages/SuggestionBoxCreation/SuggestionBoxCreation";
-import Feedbacks from "./pages/Feedbacks/Feedbacks";
-import Medium from "./components/LandingMedium/Medium";
+import Loader from "./components/Loader/Loader";
+import { GuestOnly, RequireAuth } from "./components/RouteGuards/RouteGuards";
+
+const LandingPage = lazy(() => import("./pages/LandingPage/LandingPage"));
+const GetStarted = lazy(() => import("./pages/GetStarted/GetStarted"));
+const FeedbackGiven = lazy(() => import("./pages/FeedbackGiven/FeedbackGiven"));
+const HowItsDeveloped = lazy(() =>
+  import("./pages/HowItsDeveloped/HowItsDeveloped")
+);
+const Home = lazy(() => import("./pages/Home/Home"));
+const SuggestionBoxCreation = lazy(() =>
+  import("./pages/SuggestionBoxCreation/SuggestionBoxCreation")
+);
+const Feedbacks = lazy(() => import("./pages/Feedbacks/Feedbacks"));
+const NotFound = lazy(() => import("./pages/NotFound/NotFound"));
 
 const routes = () => {
   return (
-    <Suspense fallback="Loading...">
+    <Suspense fallback={<Loader />}>
       <Routes>
-        <Route exact path="/" element={<Medium />} />
-        <Route exact path="/get-started" element={<GetStarted />} />
-        <Route exact path="/give-feedback/:uid" element={<FeedbackGiven />} />
-        <Route
-          exact
-          path="/how-it-is-developed"
-          element={<HowItsDeveloped />}
-        />
-        <Route exact path="/home" element={<Home />} />
-        <Route
-          exact
-          path="/home/create-box"
-          element={<SuggestionBoxCreation />}
-        />
-        <Route exact path="/home/feedbacks/:uid" element={<Feedbacks />} />
+        <Route element={<GuestOnly />}>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/get-started" element={<GetStarted />} />
+        </Route>
+        <Route path="/give-feedback/:uid" element={<FeedbackGiven />} />
+        <Route path="/how-it-is-developed" element={<HowItsDeveloped />} />
+        <Route element={<RequireAuth />}>
+          <Route path="/home" element={<Home />} />
+          <Route path="/home/create-box" element={<SuggestionBoxCreation />} />
+          <Route path="/home/feedbacks/:uid" element={<Feedbacks />} />
+        </Route>
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
   );

@@ -1,15 +1,11 @@
-import {
-  Document,
-  Font,
-  PDFViewer,
-  Page,
-  StyleSheet,
-  Text,
-} from "@react-pdf/renderer";
+import { Document, Font, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import oswaldFont from "@fontsource/oswald/files/oswald-latin-500-normal.woff";
+import { formatDate } from "../../util/helpers";
 
+// Bundled with the app, so exports work without fetching fonts from a CDN.
 Font.register({
   family: "Oswald",
-  src: "https://fonts.gstatic.com/s/oswald/v13/Y_TKV6o8WovbUd3m_X9aAA.ttf",
+  src: oswaldFont,
 });
 
 const styles = StyleSheet.create({
@@ -27,22 +23,27 @@ const styles = StyleSheet.create({
   author: {
     fontSize: 12,
     textAlign: "center",
-    marginBottom: 40,
+    marginTop: 4,
   },
-  subtitle: {
-    fontSize: 18,
+  generated: {
+    fontSize: 10,
+    textAlign: "center",
+    color: "grey",
+    marginTop: 4,
+    marginBottom: 30,
+  },
+  item: {
     margin: 12,
-    fontFamily: "Oswald",
   },
   text: {
-    margin: 12,
     fontSize: 14,
     textAlign: "justify",
     fontFamily: "Times-Roman",
   },
-  image: {
-    marginVertical: 15,
-    marginHorizontal: 100,
+  date: {
+    fontSize: 10,
+    color: "grey",
+    marginTop: 4,
   },
   header: {
     fontSize: 12,
@@ -59,16 +60,11 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "grey",
   },
-  date: {
-    fontSize: 12,
-    marginBottom: 20,
-    textAlign: "center",
-  },
 });
 
 const FeedbackPdf = ({ feedbacks, title, name }) => {
   return (
-    <Document>
+    <Document title={title} author={name} creator="Suggestify">
       <Page style={styles.body}>
         <Text style={styles.header} fixed>
           Feedbacks Report
@@ -76,12 +72,19 @@ const FeedbackPdf = ({ feedbacks, title, name }) => {
 
         <Text style={styles.title}>{title}</Text>
 
-        <Text style={styles.author}>{name}</Text>
+        {name && <Text style={styles.author}>{name}</Text>}
+        <Text style={styles.generated}>
+          {feedbacks.length} feedback · generated {formatDate(Date.now())}
+        </Text>
 
-        {feedbacks.map(({ feedback, id }, index) => (
-          <Text style={styles.text} key={id}>
-            {index + 1 + ". " + feedback}
-          </Text>
+        {feedbacks.map(({ feedback, id, dateTime, isMarked }, index) => (
+          <View style={styles.item} key={id} wrap={false}>
+            <Text style={styles.text}>{index + 1 + ". " + feedback}</Text>
+            <Text style={styles.date}>
+              {formatDate(dateTime)}
+              {isMarked ? " · saved" : ""}
+            </Text>
+          </View>
         ))}
         <Text
           style={styles.pageNumber}

@@ -1,54 +1,56 @@
 import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { Toaster, toast } from "react-hot-toast";
 import "./App.css";
 import Footer from "./components/Footer/Footer";
+import Navbar from "./components/Navbar/Navbar";
 import View from "./routes";
 import {
-  createUserDocumentFormAuth,
+  createUserDocumentFromAuth,
+  getGoogleRedirectResult,
   onAuthStateChangedListener,
 } from "./util/firebase";
-import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { setUserInfo } from "./store/userSlice";
-import Navbar from "./components/Navbar/Navbar";
+import { clearUserInfo, setUserInfo } from "./store/userSlice";
 
 const App = () => {
-  const nav = useNavigate();
   const dispatch = useDispatch();
-  useEffect(() => {
-    onAuthStateChangedListener(async (userAuth) => {
-      if (userAuth) {
-        const { email, uid, displayName } = userAuth;
-        await createUserDocumentFormAuth(userAuth);
 
-        const currentPath = window.location.pathname;
-        const isFeedbacksRoute =
-          currentPath.split("/")[2] === "feedbacks" ||
-          currentPath.split("/")[1] === "give-feedback";
-        dispatch(
-          setUserInfo({
-            displayName,
-            email,
-            uid,
-          })
-        );
-        if (isFeedbacksRoute) return;
-        nav("/home");
-      } else {
-        dispatch(
-          setUserInfo({
-            displayName: "",
-            email: "",
-            uid: "",
-          })
-        );
-      }
+  useEffect(() => {
+    // Surfaces errors from the redirect sign-in fallback.
+    getGoogleRedirectResult().catch((error) => {
+      console.error(error);
+      toast.error("Sign in failed. Please try again.");
     });
-  }, []);
+
+    const unsubscribe = onAuthStateChangedListener((userAuth) => {
+      if (!userAuth) {
+        dispatch(clearUserInfo());
+        return;
+      }
+
+      const { email, uid, displayName } = userAuth;
+      dispatch(setUserInfo({ displayName, email, uid }));
+      createUserDocumentFromAuth(userAuth).catch((error) =>
+        console.error("Error creating user profile:", error)
+      );
+    });
+
+    return unsubscribe;
+  }, [dispatch]);
+
   return (
     <>
       <Navbar />
-      <View />
+      <main>
+        <View />
+      </main>
       <Footer />
+      <Toaster
+        position="bottom-center"
+        toastOptions={{
+          style: { background: "#FEFAE0", color: "#283618", borderRadius: 0 },
+        }}
+      />
     </>
   );
 };

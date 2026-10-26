@@ -1,10 +1,14 @@
 .nav-container {
-  @apply mx-auto flex justify-between items-center py-3 px-10 bg-darkGreen sticky top-0 z-50 font-openSans;
+  @apply mx-auto flex justify-between items-center py-3 px-5 md:px-10 bg-darkGreen sticky top-0 z-50 font-body font-light;
 }
 
 .nav-container a {
   position: relative;
   @apply py-1;
+}
+
+.nav-button {
+  @apply border border-primary hover:border-green py-2 px-3 transition;
 }
 
 .nav-inSlider {
@@ -15,11 +19,12 @@
   @apply hidden md:inline-block;
 }
 
-.nav-container > a:before {
+.nav-container a:not(.nav-logo):not(.nav-button):before {
   content: "";
-  @apply w-0 h-[1.5px] bg-green  absolute bottom-0 left-0 transition-all;
+  @apply w-0 h-[1.5px] bg-green absolute bottom-0 left-0 transition-all;
 }
 
-.nav-container > a:hover:not(:first-child)::before {
+.nav-container a:not(.nav-logo):not(.nav-button):hover::before,
+.nav-container a.active:not(.nav-logo):not(.nav-button)::before {
   @apply w-3/4;
 }

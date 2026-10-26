@@ -10,17 +10,17 @@ const steps = [
 
 const UserGuide = () => {
   return (
-    <div className="flex flex-col lg:flex-row ps-10 border-t border-darkGreen overflow-hidden">
-      <div className="flex-1 font-helvetica_compressed text-7xl pt-10 toRight ">
+    <section className="flex flex-col lg:flex-row ps-5 md:ps-10 border-t border-darkGreen overflow-hidden">
+      <h2 className="flex-1 font-display text-6xl md:text-7xl pt-10 toRight ">
         How Suggestify works?
-      </div>
+      </h2>
       <div className="w-full lg:w-3/5 flex lg:gap-10  ">
         <span className="w-[.5px] h-full bg-darkGreen"></span>
         <div className="pt-14 pb-14">
           <Steps steps={steps} />
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 
