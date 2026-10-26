@@ -1,20 +1,106 @@
 rules_version = '2';
 
+// Data model
+//   users/{userId}                          profile of a signed-in owner
+//   users/{userId}/feedbacks/{boxId}        owner's link to a box  { name, isOpen? }
+//   feedbackBox/{boxId}                     public box info        { name, timestamp, isOpen? }
+//   feedbackBox/{boxId}/feedback/{id}       anonymous feedback     { feedback, isMarked, isRead, dateTime }
+//
+// A box is owned by whoever holds users/{uid}/feedbacks/{boxId}.
+// Boxes created before `isOpen` existed have no such field and count as open.
+
 service cloud.firestore {
   match /databases/{database}/documents {
-   
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth.uid != null && request.auth.uid == userId;
+
+    function signedIn() {
+      return request.auth != null;
     }
-    
-    match /feedbackBox/{feedbackBoxId}/feedback/{document=**} {
-    	allow read, delete: if request.auth.uid != null && exists(/databases/$(database)/documents/users/$(request.auth.uid)/feedbacks/$(feedbackBoxId));
-      allow write : if true;
+
+    function isUser(userId) {
+      return signedIn() && request.auth.uid == userId;
     }
-    
-    match /feedbackBox/{feedbackBoxId}{
-      allow read: if true;
-      allow write: if request.auth.uid != null && exists(/databases/$(database)/documents/users/$(request.auth.uid)/feedbacks/$(feedbackBoxId));
+
+    function boxPath(boxId) {
+      return /databases/$(database)/documents/feedbackBox/$(boxId);
+    }
+
+    function ownerLinkPath(boxId) {
+      return /databases/$(database)/documents/users/$(request.auth.uid)/feedbacks/$(boxId);
+    }
+
+    function isBoxOwner(boxId) {
+      return signedIn() && exists(ownerLinkPath(boxId));
+    }
+
+    function isValidName(name) {
+      return name is string && name.size() > 0 && name.size() <= 120;
+    }
+
+    function onlyChanges(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+
+    match /users/{userId} {
+      allow read, create, update: if isUser(userId);
+
+      match /feedbacks/{boxId} {
+        allow read, delete: if isUser(userId);
+
+        // A link can only be created for a box that does not exist yet.
+        // Box IDs are public (they are in the share link), so without this
+        // check anyone could claim someone else's box and read its feedback.
+        allow create: if isUser(userId)
+          && !exists(boxPath(boxId))
+          && request.resource.data.keys().hasOnly(['name', 'isOpen'])
+          && isValidName(request.resource.data.name)
+          && request.resource.data.get('isOpen', true) == true;
+
+        allow update: if isUser(userId)
+          && onlyChanges(['name', 'isOpen'])
+          && isValidName(request.resource.data.name)
+          && request.resource.data.get('isOpen', true) is bool;
+      }
+    }
+
+    match /feedbackBox/{boxId} {
+      // Anyone with the link can load a box, but nobody can list all boxes.
+      allow get: if true;
+
+      // The owner link is written in the same batch, so check the state after the write.
+      allow create: if signedIn()
+        && existsAfter(ownerLinkPath(boxId))
+        && request.resource.data.keys().hasOnly(['name', 'timestamp', 'isOpen'])
+        && isValidName(request.resource.data.name)
+        && request.resource.data.timestamp == request.time
+        && request.resource.data.isOpen == true;
+
+      allow update: if isBoxOwner(boxId)
+        && onlyChanges(['name', 'isOpen'])
+        && isValidName(request.resource.data.name)
+        && request.resource.data.get('isOpen', true) is bool;
+
+      allow delete: if isBoxOwner(boxId);
+
+      match /feedback/{feedbackId} {
+        allow read, delete: if isBoxOwner(boxId);
+
+        // Anyone can leave feedback on an existing, open box.
+        allow create: if exists(boxPath(boxId))
+          && get(boxPath(boxId)).data.get('isOpen', true) == true
+          && request.resource.data.keys().hasOnly(['feedback', 'isMarked', 'isRead', 'dateTime'])
+          && request.resource.data.feedback is string
+          && request.resource.data.feedback.size() > 0
+          && request.resource.data.feedback.size() <= 1000
+          && request.resource.data.isMarked == false
+          && request.resource.data.isRead == false
+          && request.resource.data.dateTime is int;
+
+        // The owner can bookmark / mark as read, but never edit the text.
+        allow update: if isBoxOwner(boxId)
+          && onlyChanges(['isMarked', 'isRead'])
+          && request.resource.data.isMarked is bool
+          && request.resource.data.isRead is bool;
+      }
     }
   }
 }

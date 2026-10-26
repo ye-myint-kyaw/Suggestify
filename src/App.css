@@ -1,6 +1,6 @@
 /* For Webkit browsers (Chrome, Safari) */
 ::-webkit-scrollbar {
-  width: 4px; /* Set the width of the scrollbar */
+  width: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -12,8 +12,7 @@
 }
 
 /* For Firefox */
-/* You can set the width and color of the scrollbar using scrollbar-width and scrollbar-color properties */
 * {
-  scrollbar-width: 102px; /* Set the width of the scrollbar */
-  scrollbar-color: rgb(40 54 24 / 1) rgb(254 250 224 / 1); /* Set the thumb and track colors */
+  scrollbar-width: thin;
+  scrollbar-color: rgb(40 54 24 / 1) rgb(254 250 224 / 1);
 }
