@@ -25,3 +25,6 @@ dist-ssr
 
 # Firebase
 .firebase/
+
+# Firebase web config (copy .env.example to .env)
+.env

@@ -102,7 +102,8 @@ Firestore emulator in CI:
 - Box IDs are public (they're in the share link), so **ownership can only be claimed for a box that doesn't exist yet**. This blocks taking over someone else's box from its link.
 - Boxes can be opened by ID, but **nobody can list every box**.
 
-> The Firebase web config in [`.env`](.env) is public by design. It identifies the project; it doesn't grant access.
+> The Firebase web config (see [`.env.example`](.env.example)) is public by design. It identifies the project; it doesn't grant access.
+> It's still kept out of git, so each developer and host provides their own `.env`.
 
 ## Getting started
 
@@ -121,21 +122,16 @@ yarn emulators        # terminal 1: Auth + Firestore emulators, Emulator UI at h
 yarn dev:emulators    # terminal 2: app at http://localhost:5173 wired to the emulators
 ```
 
-This uses the `demo-suggestify` project ID, so nothing touches real Firebase resources. The Auth
-emulator shows a fake Google account picker when you sign in.
+No `.env` needed. This uses the `demo-suggestify` project ID from `.env.emulator`, so nothing touches
+real Firebase resources. The Auth emulator shows a fake Google account picker when you sign in.
 
 ### Option B: use your own Firebase project
 
 1. Create a Firebase project, enable **Google** sign-in under Authentication, and create a Firestore database.
-2. Copy your web app config into a `.env.local` file (it overrides `.env` and is git-ignored):
+2. Create your `.env` (git-ignored) and fill it in from *Project settings → General → Your apps*:
 
    ```bash
-   VITE_FIREBASE_API_KEY=...
-   VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-   VITE_FIREBASE_PROJECT_ID=your-project
-   VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-   VITE_FIREBASE_MESSAGING_SENDER_ID=...
-   VITE_FIREBASE_APP_ID=...
+   cp .env.example .env
    ```
 
 3. Deploy the security rules (`npx firebase deploy --only firestore:rules --project your-project`) and run `yarn dev`.
@@ -144,7 +140,7 @@ emulator shows a fake Google account picker when you sign in.
 
 | Command | What it does |
 | --- | --- |
-| `yarn dev` | Start the dev server against the Firebase project in `.env` / `.env.local` |
+| `yarn dev` | Start the dev server against the Firebase project in `.env` |
 | `yarn dev:emulators` | Start the dev server against the local emulators |
 | `yarn emulators` | Start the Auth + Firestore emulators |
 | `yarn build` / `yarn preview` | Production build / preview it locally |
@@ -154,7 +150,8 @@ emulator shows a fake Google account picker when you sign in.
 
 ## Deployment
 
-The live demo runs on **Firebase Hosting**:
+The live demo runs on **Firebase Hosting**. Make sure `.env` holds the project's config (see
+[Option B](#option-b-use-your-own-firebase-project)), then:
 
 ```bash
 yarn build
@@ -162,8 +159,9 @@ npx firebase deploy --only hosting,firestore:rules
 ```
 
 Deploy the rules and the app **together**: the app relies on the current rules (for example,
-atomic box creation). `vercel.json` and `netlify.toml` provide SPA rewrites if you prefer those hosts.
-For Google sign-in there, add the domain under *Authentication → Settings → Authorized domains*.
+atomic box creation). `vercel.json` and `netlify.toml` provide SPA rewrites if you prefer those hosts. There, set the
+same `VITE_FIREBASE_*` variables in the project's environment settings, and add the domain under
+*Authentication → Settings → Authorized domains* so Google sign-in works.
 
 ## Project structure
 

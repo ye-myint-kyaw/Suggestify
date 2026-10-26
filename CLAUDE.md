@@ -9,7 +9,7 @@ Suggestify is an anonymous "suggestion box" SPA. Owners sign in with Google, cre
 Package manager is **Yarn 1** (`yarn.lock`). You need Node 22.12+, and Java 21 for the Firebase emulators.
 
 ```bash
-yarn dev                 # dev server against the real project in .env / .env.local
+yarn dev                 # dev server against the real project in .env (cp .env.example .env first)
 yarn emulators           # Auth + Firestore emulators (project demo-suggestify, UI on :4000)
 yarn dev:emulators       # dev server wired to the emulators (vite --mode emulator → .env.emulator)
 yarn build               # production build to dist/
@@ -88,7 +88,10 @@ Every Firestore and Auth call lives in this one module.
 
 ## Config and conventions
 
-- **Env files.** `.env` is committed and holds the live project's public Firebase web config. `.env.local` (git-ignored) overrides it for another project. `.env.emulator` uses the `demo-suggestify` project, which never touches real resources.
+- **Env files.**
+  - `.env` is git-ignored and holds the Firebase web config (`VITE_FIREBASE_*`). `.env.example` is the committed template. `src/util/firebase.js` throws a clear error if the config is missing.
+  - `.env.emulator` is committed with fake `demo-suggestify` values, so emulator mode needs no `.env` and never touches real resources.
+  - CI needs no `.env`: build and tests don't use real Firebase values.
 - **Tailwind theme.** The custom colors `green`, `darkGreen`, `primary`, `brown` and `red` **replace** Tailwind's default `green`/`red` scales. Fonts:
   - `font-display` is Oswald, for headings.
   - `font-body` is Inter, and is normally paired with `font-light`.

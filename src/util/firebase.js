@@ -37,6 +37,12 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
+if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+  throw new Error(
+    "Missing Firebase config. Copy .env.example to .env and fill in your project's values, or run `yarn dev:emulators` to use the local emulators."
+  );
+}
+
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
