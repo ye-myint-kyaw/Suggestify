@@ -1,21 +1,15 @@
-@import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@300&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 @layer base {
   html {
-    font-family: "Helvetica", sans-serif;
+    @apply font-sans;
   }
   body {
     @apply bg-darkGreen text-primary;
   }
-}
-@font-face {
-  font-family: Helvetica;
-  src: url(./assets/Helvetica-Font/Helvetica.ttf);
-}
-
-@font-face {
-  font-family: Helvetica_compressed;
-  src: url(./assets/Helvetica-Font/helvetica-compressed-5871d14b6903a.otf);
+  :focus-visible {
+    @apply outline outline-2 outline-offset-2 outline-brown;
+  }
 }

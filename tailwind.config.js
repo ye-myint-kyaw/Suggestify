@@ -12,8 +12,9 @@ export default {
       },
     },
     fontFamily: {
-      openSans: ["Open Sans"],
-      helvetica_compressed: "Helvetica_compressed",
+      sans: ["Inter", "system-ui", "sans-serif"],
+      body: ["Inter", "system-ui", "sans-serif"],
+      display: ["Oswald", "Arial Narrow", "sans-serif"],
     },
   },
   plugins: [],
